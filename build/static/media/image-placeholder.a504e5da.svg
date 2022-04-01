@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 24 24" fill="currentColor" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,2V22H24V2ZM22,20H2V4H22Z" fill="currentColor"></path>
+    <polygon points="20 18 20 13 16 7 12 13 10 11 4 16 4 18 20 18" fill="currentColor"></polygon>
+    <circle cx="6" cy="7.99902" r="2" fill="currentColor"></circle>
+</svg>
