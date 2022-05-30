@@ -1,0 +1,76 @@
+@import "~@contentful/forma-36-tokens/dist/css/index.css";
+
+.ep-product-preview-wrapper {
+  overflow: hidden;
+}
+
+.ep-preview-wrapper {
+  display: flex;
+  padding: 0;
+  position: relative;
+}
+
+.ep-preview-wrapper:not(:first-of-type) {
+  margin-top: var(--spacing-xs);
+}
+
+.ep-preview-image-wrapper {
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  margin: var(--spacing-m);
+  position: relative;
+}
+
+.ep-preview-section {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.ep-preview-image {
+  display: block;
+  height: 48px;
+  min-width: auto;
+  user-select: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ep-preview-name {
+  font-size: var(--font-size-l);
+  margin-bottom: var(--spacing-2xs);
+  text-transform: capitalize;
+}
+
+.ep-preview-connectorValue {
+  color: var(--color-element-darkest);
+  font-size: var(--font-size-s);
+  margin-bottom: 0;
+}
+
+.ep-card-handler {
+  height: auto;
+}
+
+.ep-product-item-actions {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+}
+
+.ep-product-item-actions a {
+  display: inline-block;
+  margin-right: var(--spacing-xs);
+}
+
+.ep-product-item-actions svg {
+  transition: fill var(--transition-duration-default) var(--transition-easing-default);
+}
+
+.ep-product-item-actions svg:hover {
+  fill: var(--color-contrast-dark);
+}

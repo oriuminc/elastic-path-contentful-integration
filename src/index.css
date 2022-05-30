@@ -1,0 +1,25 @@
+@import "~@contentful/forma-36-tokens/dist/css/index.css";
+
+html,
+body,
+div {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+
+.ep-logo {
+  display: block;
+  width: 30px;
+  height: 30px;
+  margin-right: var(--spacing-m);
+}
+
+.ep-connector-container {
+  display: flex;
+  margin-top: var(--spacing-m);
+}
+

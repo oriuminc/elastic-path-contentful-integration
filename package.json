@@ -1,0 +1,70 @@
+{
+  "name": "epconnector",
+  "version": "1.0.0",
+  "private": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/myplanetdigital/epconnector"
+  },
+  "homepage": ".",
+  "dependencies": {
+    "@contentful/field-editor-single-line": "^0.11.1",
+    "@contentful/field-editor-test-utils": "^0.8.1",
+    "@contentful/forma-36-fcss": "^0.2.11",
+    "@contentful/forma-36-react-components": "^3.67.6",
+    "@contentful/forma-36-tokens": "^0.9.1",
+    "@moltin/sdk": "^11.11.0",
+    "@testing-library/jest-dom": "^5.11.5",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
+    "@types/jest": "^26.0.15",
+    "@types/lodash.get": "^4.4.6",
+    "@types/node": "^14.14.5",
+    "@types/react": "^16.9.54",
+    "@types/react-dom": "^16.9.9",
+    "array-move": "^3.0.1",
+    "axios": "^0.26.1",
+    "bottleneck": "^2.19.5",
+    "contentful-ui-extensions-sdk": "^3.23.4",
+    "fuse.js": "^6.5.3",
+    "lodash": "^4.17.21",
+    "lodash.get": "^4.4.2",
+    "qs": "^6.10.3",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "react-scripts": "^4.0.1",
+    "react-sortable-hoc": "^1.11.0",
+    "typescript": "^4.0.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "buildInternal": "GENERATE_SOURCEMAP=true react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "check-env": "node -e 'console.log(process.env)' | grep npm"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@contentful/app-scripts": "^0.13.22",
+    "@types/qs": "^6.9.7"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
