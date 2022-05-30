@@ -15,7 +15,8 @@ tmp
 
 # Build
 public/css/main.css
-/build
+build
+tsconfig.tsbuildinfo
 
 # Coverage reports
 coverage
