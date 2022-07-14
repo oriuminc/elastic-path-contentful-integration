@@ -1,20 +1,60 @@
-import React from "react";
-import { Paragraph } from "@contentful/f36-components";
+import React, { useState } from "react";
+import { TextInput, Box, Stack, Button } from "@contentful/f36-components";
 import { FieldExtensionSDK } from "@contentful/app-sdk";
 import { /* useCMA, */ useSDK } from "@contentful/react-apps-toolkit";
+import { getProducts } from "../api/pxm";
+import { EpFilterAttribute, EpFilterOperator } from "../types";
 
 const Field = () => {
   const sdk = useSDK<FieldExtensionSDK>();
-  /*
-     To use the cma, inject it as follows.
-     If it is not needed, you can remove the next line.
-  */
-  // const cma = useCMA();
-  // If you only want to extend Contentful's default editing experience
-  // reuse Contentful's editor components
+  const [products, setProducts] = useState({});
+
   // -> https://www.contentful.com/developers/docs/extensibility/field-editors/
   return (
-    <Paragraph>Hello Entry Field Component (AppId: {sdk.ids.app})</Paragraph>
+    <Box>
+      <Stack>
+        <Box>
+          <TextInput
+            // value={sdk.field.getValue()}
+            onChange={(e) => {
+              sdk.field.setValue(e.target.value);
+            }}
+          />
+        </Box>
+        <Box>
+          <Button
+            onClick={async () => {
+              const data = await getProducts({
+                filterAttribute: EpFilterAttribute.SKU,
+                filterOperator: EpFilterOperator.IN,
+                values: [sdk.field.getValue()],
+              });
+              console.log("search response = ", data);
+
+              if (data) setProducts(data?.data?.[0].id ?? {});
+            }}
+          >
+            Search
+          </Button>
+        </Box>
+        <Box>
+          <Button
+            onClick={() => {
+              const title = sdk.field.getValue();
+              sdk.entry.fields.products.setValue([
+                ...sdk.entry.fields.products.getValue(),
+                title,
+              ]);
+            }}
+          >
+            Add to Products
+          </Button>
+        </Box>
+      </Stack>
+      <Stack>
+        <Box>Response: {JSON.stringify(products)}</Box>
+      </Stack>
+    </Box>
   );
 };
 
