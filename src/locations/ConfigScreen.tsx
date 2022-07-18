@@ -65,7 +65,7 @@ const ConfigScreen = () => {
       <Form>
         <Heading>Test App Config</Heading>
         <Paragraph>
-          v2 Welcome to your contentful app. This is your config page.
+          v2 thats it Welcome to your contentful app. This is your config page.
         </Paragraph>
       </Form>
     </Flex>

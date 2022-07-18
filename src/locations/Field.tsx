@@ -1,58 +1,73 @@
-import React, { useState } from "react";
-import { TextInput, Box, Stack, Button } from "@contentful/f36-components";
+import React, {useEffect, useState} from "react";
+import {TextInput, Box, Stack, Button, List, EntryCard} from "@contentful/f36-components";
 import { FieldExtensionSDK } from "@contentful/app-sdk";
 import { /* useCMA, */ useSDK } from "@contentful/react-apps-toolkit";
-import { getProducts } from "../api/pxm";
-import { EpFilterAttribute, EpFilterOperator } from "../types";
+
 
 const Field = () => {
+  const [ currentProducts, setCurrentProducts ] = useState<{ [key: string]: any}>([]);
   const sdk = useSDK<FieldExtensionSDK>();
-  const [products, setProducts] = useState({});
+
+
+  useEffect(() => {
+    // adjust the contentful field to the pxm field
+    sdk.window.startAutoResizer();
+    const currentProducts = sdk.entry.fields.products.getValue();
+    console.log(currentProducts)
+    setCurrentProducts(currentProducts);
+  }, []);
 
   // -> https://www.contentful.com/developers/docs/extensibility/field-editors/
   return (
     <Box>
       <Stack>
         <Box>
-          <TextInput
-            // value={sdk.field.getValue()}
-            onChange={(e) => {
-              sdk.field.setValue(e.target.value);
-            }}
-          />
-        </Box>
-        <Box>
           <Button
             onClick={async () => {
-              const data = await getProducts({
-                filterAttribute: EpFilterAttribute.SKU,
-                filterOperator: EpFilterOperator.IN,
-                values: [sdk.field.getValue()],
+              const selectedProducts = await sdk.dialogs.openCurrentApp({
+                width: "fullWidth",
+                minHeight: "70vh",
+                parameters: {
+                  products: [],
+                },
+                shouldCloseOnOverlayClick: true,
+                shouldCloseOnEscapePress: true,
               });
-              console.log("search response = ", data);
 
-              if (data) setProducts(data?.data?.[0].id ?? {});
+              console.log('<><>',selectedProducts);
+              console.log(sdk.entry.fields.products.getValue());
+
+              const currentProducts = sdk.entry.fields.products.getValue();
+
+              console.log(currentProducts);
+                // @ts-ignore
+              const allProducts = await sdk.entry.fields.products.setValue({
+                ...currentProducts,
+                ...selectedProducts,
+              });
+
+              // @ts-ignore
+              setCurrentProducts({ ...allProducts });
             }}
           >
-            Search
+            Add Products
           </Button>
+
+          {/*{ JSON.stringify(currentProducts) }*/}
+          <Box>
+            {
+              Object.keys(currentProducts)
+                .map((productId: string) =>
+                  <EntryCard
+                    marginTop={"spacingM"}
+                    marginBottom={"spacingM"}
+                    size="default"
+                    title={currentProducts[productId].name}
+                    description={currentProducts[productId].sku}
+                  />)
+            }
+          </Box>
         </Box>
-        <Box>
-          <Button
-            onClick={() => {
-              const title = sdk.field.getValue();
-              sdk.entry.fields.products.setValue([
-                ...sdk.entry.fields.products.getValue(),
-                title,
-              ]);
-            }}
-          >
-            Add to Products
-          </Button>
-        </Box>
-      </Stack>
-      <Stack>
-        <Box>Response: {JSON.stringify(products)}</Box>
       </Stack>
     </Box>
   );

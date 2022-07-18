@@ -21,7 +21,8 @@ import {
 export const getAccessToken = async (clientId: string, storeId?: string) => {
   const data = qs.stringify({
     client_id: clientId,
-    grant_type: "implicit",
+    client_secret: "EguPENTOwP5lbiFhB7f995bsqqPPcEK3m7OZgfoFpf",
+    grant_type: "client_credentials",
   });
   const headers = {
     "content-type": "text/plain",
@@ -74,7 +75,7 @@ const buildFilter: BuildFilterProps = (
 };
 
 // TOOD: Typing and filter rules
-export const getProducts = async ({
+export const getCatalogProducts = async ({
   filterAttribute,
   filterOperator,
   values,
@@ -93,10 +94,73 @@ export const getProducts = async ({
   // TODO: type?
   // EpCollectionResponse<EpProductInterface[]>
   const products: any = await axiosClient.get(
-    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}`
+    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&include=main_image`
   );
 
   console.log("getProducts() ? ", products);
 
   return products ? products.data : null;
+};
+
+
+// TOOD: Typing and filter rules
+export const getProducts = async ({
+                                           filterAttribute,
+                                           value,
+                                         }: {
+  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
+  value: string
+}) => {
+  let filterUrl;
+
+  if (filterAttribute === EpFilterAttribute.SKU) {
+    filterUrl = `${EpFilterOperator.EQ}(${filterAttribute},${value})`;
+  } else {
+    filterUrl = `${EpFilterOperator.LIKE}(${filterAttribute},${value})`;
+  }
+
+  // TODO: type?
+  // EpCollectionResponse<EpProductInterface[]>
+  const products: any = await getProductsFromUrl(
+    `${EP_HOST}/pcm/products?filter=${filterUrl}`,
+      []
+  );
+
+  console.log("getProducts() ? ", products);
+
+  return products ? products : [];
+};
+
+// @ts-ignore
+export const getProductsFromUrl = async (url: string, products: any[]) => {
+  try {
+    const axiosClient = await initAxiosClient();
+    const { data }: any = await axiosClient.get(url);
+    if (data &&
+      data.links &&
+      (data.links.next || data.links.last)) {
+      return await getProductsFromUrl(data.links.next || data.links.last, [...products, ...data.data]);
+    } else {
+      return [...products, ...data.data];
+    }
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+
+export const getFile = async (id: string) => {
+  // TODO: init once
+  const axiosClient = await initAxiosClient();
+
+  // TODO: type?
+  // EpCollectionResponse<EpProductInterface[]>
+  const file: any = await axiosClient.get(
+    `${EP_HOST}/v2/files/${id}`
+  );
+
+  console.log("getFile() ? ", file);
+
+  return file ? file.data : null;
 };
