@@ -79,13 +79,15 @@ export const getCatalogProducts = async ({
   filterAttribute,
   filterOperator,
   values,
+  catalog = ''
 }: {
   filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
   filterOperator: EpFilterOperator.EQ | EpFilterOperator.IN;
   values: string | string[];
+  catalog?: string;
 }) => {
   // TODO: init once
-  const axiosClient = await initAxiosClient();
+  const axiosClient = await initAxiosClient(catalog);
 
   const filterUrl = buildFilter(values, filterAttribute, filterOperator);
 
@@ -103,11 +105,25 @@ export const getCatalogProducts = async ({
 };
 
 
+export const mapCatalogProductWithMainImages = (products: any, included: any) => {
+  const mainImagesById = included.main_images.reduce(
+    (obj: any, item: any) => Object.assign(obj, { [item.id]: {...item} }), {}
+  );
+
+  return products ? products.map(
+    (product: any) => ({
+      ...product.attributes,
+      id: product.id,
+      main_image: mainImagesById[product.relationships.main_image.data.id]
+    })
+  ) : [];
+}
+
 // TOOD: Typing and filter rules
 export const getProducts = async ({
-                                           filterAttribute,
-                                           value,
-                                         }: {
+                                    filterAttribute,
+                                    value
+}: {
   filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
   value: string
 }) => {
