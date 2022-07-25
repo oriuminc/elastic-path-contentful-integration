@@ -2,15 +2,10 @@ import React, {useEffect, useState} from "react";
 
 import {
   Box,
-  Button,
-  EntryCard,
-  MenuItem,
   Stack,
   DragHandle,
   IconButton,
   Card,
-  Typography,
-  Heading,
   Subheading, Text, Flex, Asset
 } from "@contentful/f36-components";
 
@@ -23,15 +18,15 @@ import {
   DndContext,
   DragEndEvent,
   PointerSensor,
-  UniqueIdentifier,
   useSensor,
 } from '@dnd-kit/core';
 
 import {arrayMove, SortableContext, verticalListSortingStrategy,} from '@dnd-kit/sortable';
 
 import Draggable from "../components/Draggable";
-import {getCatalogProducts, mapCatalogProductWithMainImages} from "../api/pxm";
+import {getAccessToken, getCatalogProducts, mapCatalogProductWithMainImages} from "../api/pxm";
 import {EpFilterAttribute, EpFilterOperator} from "../types";
+import {initAxiosInterceptors, setToken} from "../helpers/authHelpers";
 
 const Field = () => {
   const [ currentProducts, setCurrentProducts ] = useState<any[]>([]);
@@ -42,14 +37,33 @@ const Field = () => {
   useEffect(() => {
     // adjust the contentful field to the pxm field
     sdk.window.startAutoResizer();
+
+    getAccessToken({
+      clientId: sdk.parameters.installation.clientId,
+      clientSecret: sdk.parameters.installation.clientSecret
+    })
+      .then(response => {
+        setToken(response.access_token);
+        initAxiosInterceptors({
+          host: 'https://useast.api.elasticpath.com'
+        });
+      })
+      .then(async () => {
+        await syncDataProducts();
+      })
+  }, []);
+
+
+  const syncDataProducts = async () => {
     const currentProducts = sdk.entry.fields.products.getValue();
 
-    // Getting the product details from EP in case some was updated
-    getCatalogProducts({
-      filterAttribute: EpFilterAttribute.SKU,
-      filterOperator: EpFilterOperator.IN,
-      values: currentProducts.map((product: any) => product.sku),
-    }).then(({ data: products, included }) => {
+    if (currentProducts && currentProducts.length) {
+      // Getting the product details from EP in case some was updated
+      const {data: products, included } = await getCatalogProducts({
+        filterAttribute: EpFilterAttribute.SKU,
+        filterOperator: EpFilterOperator.IN,
+        values: currentProducts.map((product: any) => product.sku),
+      })
 
       // EP is not returning the products in the order we have specified in the in filter
       const productsWithImage = mapCatalogProductWithMainImages(products, included);
@@ -62,8 +76,8 @@ const Field = () => {
 
       // @ts-ignore
       setCurrentProducts(updatedProducts);
-    });
-  }, []);
+    }
+  }
 
   const removeAllProducts = async () => {
     sdk.entry.fields.products.setValue([]);
@@ -98,9 +112,6 @@ const Field = () => {
     const selectedProducts = await sdk.dialogs.openCurrentApp({
       width: "fullWidth",
       minHeight: "70vh",
-      parameters: {
-        products: [],
-      },
       shouldCloseOnOverlayClick: true,
       shouldCloseOnEscapePress: true,
     });
@@ -109,8 +120,8 @@ const Field = () => {
 
     // @ts-ignore
     const allProducts = await sdk.entry.fields.products.setValue([
-      ...currentProducts,
-      ...selectedProducts,
+      ...(currentProducts ?? []),
+      ...(selectedProducts ?? []),
     ]);
 
     // @ts-ignore

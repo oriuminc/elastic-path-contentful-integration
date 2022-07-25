@@ -5,34 +5,45 @@ import {
   Box,
   Button,
   Card,
-  EntryCard,
   Flex,
-  Paragraph,
   TextInput,
   Text,
   ButtonGroup,
-  IconButton,
-  Menu,
   Select,
-  DisplayText, Asset, Pagination
+  Asset,
+  Pagination
 } from '@contentful/f36-components';
 import { DialogExtensionSDK } from '@contentful/app-sdk';
-import { useCMA, useSDK } from '@contentful/react-apps-toolkit';
-import {getCatalogProducts, getFile, getProducts, mapCatalogProductWithMainImages} from "../api/pxm";
+import { useSDK } from '@contentful/react-apps-toolkit';
+import {getCatalogProducts, getNextProductPage, getProducts, mapCatalogProductWithMainImages} from "../api/pxm";
 import {EpFilterAttribute, EpFilterOperator} from "../types";
-import entryEditor from "./EntryEditor";
-import { ChevronDownIcon, PlusIcon, MenuIcon } from '@contentful/f36-icons';
 import { useDebounce } from 'usehooks-ts';
-
-import ProductImage from '../components/ProductImage';
-import page from "./Page";
+import {initAxiosInterceptors} from "../helpers/authHelpers";
 
 // @ts-ignore
 const Dialog = () => {
   const [value, setValue] = useState<string>('');
-  const [page, setPage] = useState(0);
+  const [dataPagination, setDataPagination] = useState({
+    links: {
+      next: '',
+      last: '',
+      first: '',
+      prev: ''
+    },
+    meta: {
+      results: {
+        total: 0
+      },
+      page: {
+        current: 1,
+        limit: 25,
+        total: 0
+      },
+    },
+  });
   const debouncedValue = useDebounce<string>(value, 500);
   const [selectValue, setSelectValue] = useState('');
+  const [catalogs, setCatalogs] = useState<any[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<any>({});
   const [products, setProducts] = useState<any>([]);
 
@@ -52,7 +63,8 @@ const Dialog = () => {
           name: product.name,
           sku: product.sku,
           id: product.id,
-          main_image: product.main_image
+          main_image: product.main_image,
+          catalogTag: selectValue
         }
       });
     }
@@ -64,26 +76,75 @@ const Dialog = () => {
       value: name,
     });
 
-    if (!data.length) return [];
+    if (!data.length) return { products: [] };
 
-    const { data: products, included } = await getCatalogProducts({
+    const { data: products, included, links, meta } = await getCatalogProducts({
       filterAttribute: EpFilterAttribute.SKU,
       filterOperator: EpFilterOperator.IN,
       values: data.map((product: any) => product.attributes.sku), // [data[51].attributes.sku, data[50].attributes.sku]
-      catalog: selectValue
+      catalogTag: selectValue
     });
 
-    return mapCatalogProductWithMainImages(products, included);
+    return {
+      products: mapCatalogProductWithMainImages(products, included) ?? [],
+      links,
+      meta: {
+        ...meta,
+        page: {
+          ...meta.page,
+          // current: 0
+        }
+      }
+    };
+  }
+  const getPageToCall = (currentPage: number, nextPage: number) => {
+    console.log(nextPage, currentPage);
+    if (nextPage === currentPage + 1) {
+      return dataPagination.links.next;
+    } else if (nextPage === currentPage - 1) {
+      return dataPagination.links.prev;
+    } else {
+      return dataPagination.links.first;
+    }
+
+  }
+
+  const handleChangePage = async (nextPage: number) => {
+    window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
+
+    const pageToCall = getPageToCall(dataPagination.meta.page.current, nextPage + 1);
+    console.log(pageToCall);
+    if (pageToCall) {
+      const { data: products, links, meta, included }= await getNextProductPage(pageToCall);
+      console.log(links, meta);
+      setProducts(mapCatalogProductWithMainImages(products, included));
+      setDataPagination({
+        links,
+        meta
+      });
+    }
   }
 
   useEffect(() => {
     if (debouncedValue) {
       searchProductsByNameInCatalog(debouncedValue)
-        .then((products) => {
-          setProducts([...products]);
+        .then(({ products, links, meta }: any) => {
+          if (products.length) {
+            setDataPagination({links, meta})
+            setProducts([...products]);
+          }
         });
     }
   }, [debouncedValue]);
+
+  useEffect(() => {
+    initAxiosInterceptors({ host: 'https://useast.api.elasticpath.com' })
+    const catalogs = sdk.parameters.installation.catalogs;
+    setCatalogs(catalogs);
+    if (catalogs && catalogs[0]) {
+      setSelectValue(catalogs[0].headerTag);
+    }
+  }, []);
 
   return <Workbench>
     <Workbench.Header
@@ -101,31 +162,26 @@ const Dialog = () => {
               name="optionSelect-controlled"
               style={{
                 borderRadius: '0px 6px 6px 0px',
-                // background: 'rgb(3, 111, 227)',
-                // color: 'white',
               }}
               value={selectValue}
 
               onChange={(e) => setSelectValue(e.target.value)}
             >
-              <Select.Option value="wine">wine</Select.Option>
-              <Select.Option value="accessories">accessories</Select.Option>
+              {
+                catalogs.map((catalog: any) =>
+                  <Select.Option key={catalog.name} value={catalog.headerTag}>{catalog.name}</Select.Option>
+                )
+              }
             </Select>
-            {/*<IconButton*/}
-            {/*  variant="primary"*/}
-            {/*  aria-label="Open dropdown"*/}
-            {/*  icon={<ChevronDownIcon />}*/}
-            {/*/>*/}
-
           </ButtonGroup>
           <TextInput
             style={{ width: '50%' }}
-            // value={sdk.field.getValue()}
             onChange={handleChange}
           />
         </Flex>
         <Box>
           <Button
+            variant="positive"
             onClick={async () => {
               // @ts-ignore
               sdk.close(Object.values(selectedProducts));
@@ -170,12 +226,14 @@ const Dialog = () => {
             ) : <Text fontSize={'fontSize2Xl'} fontColor={'gray400'}> No products found </Text>
         }
         {
-          products.length ? <Pagination
-            activePage={page}
-            onPageChange={setPage}
-            itemsPerPage={25}
-            totalItems={5}
-          />: null
+          products.length ?
+            <Pagination
+              isLastPage={((dataPagination.meta.page.current * dataPagination.meta.page.limit) + dataPagination.meta.page.total) === dataPagination.meta.results.total}
+              activePage={dataPagination.meta.page.current - 1}
+              onPageChange={handleChangePage}
+              itemsPerPage={dataPagination.meta.page.limit}
+              totalItems={dataPagination.meta.results.total}
+            />: null
         }
       </Flex>
       </Workbench.Content>

@@ -8,8 +8,8 @@ import {useSortable} from "@dnd-kit/sortable";
 function Draggable({ id, ...props}) {
   const {
     attributes,
-    listeners,
     isDragging,
+    listeners,
     setNodeRef,
     transform,
     transition,
@@ -20,7 +20,6 @@ function Draggable({ id, ...props}) {
   return (
     <Box ref={setNodeRef}
          id={id}
-         fullWidth={true}
          marginTop={'spacingS'}
          marginBottom={'spacingS'}
          style={{
