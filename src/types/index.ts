@@ -197,6 +197,7 @@ export interface ConfigurationParameters {
 export enum EpFilterOperator {
   EQ = "eq",
   IN = "in",
+  LIKE = "like",
 }
 
 export enum EpFilterAttribute {
