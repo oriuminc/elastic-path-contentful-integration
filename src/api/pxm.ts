@@ -106,10 +106,14 @@ export const mapCatalogProductWithMainImages = (products: any, included: any) =>
 // TOOD: Typing and filter rules
 export const getProducts = async ({
                                     filterAttribute,
-                                    value
+                                    value,
+    limit = 10,
+    offset = 0,
 }: {
-  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
+  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME
   value: string
+  limit?: number
+  offset?: number
 }) => {
   let filterUrl;
 
@@ -119,29 +123,16 @@ export const getProducts = async ({
     filterUrl = `${EpFilterOperator.LIKE}(${filterAttribute},${value})`;
   }
 
-  // TODO: type?
-  // EpCollectionResponse<EpProductInterface[]>
-  const products: any = await getProductsFromUrl(
-    `${EP_HOST}/pcm/products?filter=${filterUrl}`,
-      []
-  );
-
-  return products ? products : [];
-};
-
-// @ts-ignore
-export const getProductsFromUrl = async (url: string, products: any[]) => {
-  try {
-    const { data }: any = await axios.get(url);
-    if (data &&
-      data.links &&
-      (data.links.next || data.links.last)) {
-      return await getProductsFromUrl(data.links.next || data.links.last, [...products, ...data.data]);
-    } else {
-      return [...products, ...data.data];
+  const response: any = await axios.get(`${EP_HOST}/pcm/products`, {
+    params: {
+      filter: value ? filterUrl : undefined,
+      'page[limit]': limit,
+      'page[offset]': offset,
     }
-  } catch (error) {
-    console.log(error);
-    return [];
+  })
+
+  return {
+    products: response?.data?.data || [],
+    total: response?.data?.meta?.results?.total || 0
   }
 };

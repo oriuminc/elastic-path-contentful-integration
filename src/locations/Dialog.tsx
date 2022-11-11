@@ -20,32 +20,22 @@ import {EpFilterAttribute, EpFilterOperator} from "../types";
 import { useDebounce } from 'usehooks-ts';
 import {initAxiosInterceptors} from "../helpers/authHelpers";
 
+const PAGE_SIZE = 10
+
 // @ts-ignore
 const Dialog = () => {
   const [value, setValue] = useState<string>('');
-  const [dataPagination, setDataPagination] = useState({
-    links: {
-      next: '',
-      last: '',
-      first: '',
-      prev: ''
-    },
-    meta: {
-      results: {
-        total: 0
-      },
-      page: {
-        current: 1,
-        limit: 25,
-        total: 0
-      },
-    },
-  });
   const debouncedValue = useDebounce<string>(value, 500);
   const [selectValue, setSelectValue] = useState('');
   const [catalogs, setCatalogs] = useState<any[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<any>({});
   const [products, setProducts] = useState<any>([]);
+  const [paging, setPaging] = useState({
+    offset: 0,
+    total: undefined
+  })
+  // searchIsReady is a flag to indicate that the axios req interceptor is set
+  const [searchIsReady, setSearchIsReady] = useState(false)
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
@@ -70,72 +60,55 @@ const Dialog = () => {
     }
   };
 
-  const searchProductsByNameInCatalog = async (name: string) => {
+  const searchProductsByNameInCatalog = async ({name, limit, offset}:{name: string, limit?: number, offset?: number
+  }) => {
     const data = await getProducts({
       filterAttribute: EpFilterAttribute.NAME,
       value: name,
+      limit,
+      offset
     });
 
-    if (!data.length) return { products: [] };
+    if (!data.total) return { products: [] };
 
-    const { data: products, included, links, meta } = await getCatalogProducts({
+    const { data: products, included } = await getCatalogProducts({
       filterAttribute: EpFilterAttribute.SKU,
       filterOperator: EpFilterOperator.IN,
-      values: data.map((product: any) => product.attributes.sku), // [data[51].attributes.sku, data[50].attributes.sku]
+      values: data.products.map((product: any) => product.attributes.sku), // [data[51].attributes.sku, data[50].attributes.sku]
       catalogTag: selectValue
     });
 
     return {
       products: mapCatalogProductWithMainImages(products, included) ?? [],
-      links,
-      meta: {
-        ...meta,
-        page: {
-          ...meta.page,
-          // current: 0
-        }
-      }
+      total: data.total
     };
   }
-  const getPageToCall = (currentPage: number, nextPage: number) => {
-    console.log(nextPage, currentPage);
-    if (nextPage === currentPage + 1) {
-      return dataPagination.links.next;
-    } else if (nextPage === currentPage - 1) {
-      return dataPagination.links.prev;
-    } else {
-      return dataPagination.links.first;
-    }
 
+  const getProductResultsPage = (name: string, offset: number) => {
+    searchProductsByNameInCatalog({
+      name,
+      offset,
+      limit: PAGE_SIZE,
+    }).then(({ products, total }) => {
+      setProducts(products);
+      setPaging({
+        ...paging,
+        offset,
+        total
+      })
+    });
   }
 
   const handleChangePage = async (nextPage: number) => {
-    window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
-
-    const pageToCall = getPageToCall(dataPagination.meta.page.current, nextPage + 1);
-    console.log(pageToCall);
-    if (pageToCall) {
-      const { data: products, links, meta, included }= await getNextProductPage(pageToCall);
-      console.log(links, meta);
-      setProducts(mapCatalogProductWithMainImages(products, included));
-      setDataPagination({
-        links,
-        meta
-      });
-    }
+    const newPageOffset = nextPage * PAGE_SIZE
+    getProductResultsPage(debouncedValue, newPageOffset)
   }
 
   useEffect(() => {
-    if (debouncedValue) {
-      searchProductsByNameInCatalog(debouncedValue)
-        .then(({ products, links, meta }: any) => {
-          if (products.length) {
-            setDataPagination({links, meta})
-            setProducts([...products]);
-          }
-        });
+    if (searchIsReady) {
+      getProductResultsPage(debouncedValue, 0)
     }
-  }, [debouncedValue]);
+  }, [debouncedValue, searchIsReady]);
 
   useEffect(() => {
     initAxiosInterceptors({ host: 'https://useast.api.elasticpath.com' })
@@ -144,100 +117,112 @@ const Dialog = () => {
     if (catalogs && catalogs[0]) {
       setSelectValue(catalogs[0].headerTag);
     }
+    setSearchIsReady(true)
   }, []);
 
   return <Workbench>
     <Workbench.Header
-      title={'Add products'}
-      actions={<>
-        <Flex
-          className={'awesome-search'}
-          style={{ width: '50%' }}
-          gap={'spacingXs'}
-        >
-          <ButtonGroup >
-            <Button variant="primary">Catalog</Button>
-            <Select
-              id="optionSelect-controlled"
-              name="optionSelect-controlled"
-              style={{
-                borderRadius: '0px 6px 6px 0px',
-              }}
-              value={selectValue}
-
-              onChange={(e) => setSelectValue(e.target.value)}
-            >
-              {
-                catalogs.map((catalog: any) =>
-                  <Select.Option key={catalog.name} value={catalog.headerTag}>{catalog.name}</Select.Option>
-                )
-              }
-            </Select>
-          </ButtonGroup>
-          <TextInput
-            style={{ width: '50%' }}
-            onChange={handleChange}
-          />
-        </Flex>
-        <Box>
-          <Button
-            variant="positive"
-            onClick={async () => {
-              // @ts-ignore
-              sdk.close(Object.values(selectedProducts));
-            }}
+        title={'Add products'}
+        actions={<>
+          <Flex
+              className={'awesome-search'}
+              style={{ width: '50%' }}
+              gap={'spacingXs'}
           >
-            Save products
-          </Button>
-        </Box>
-      </>}
+            <ButtonGroup >
+              <Button variant="primary">Catalog</Button>
+              <Select
+                  id="optionSelect-controlled"
+                  name="optionSelect-controlled"
+                  style={{
+                    borderRadius: '0px 6px 6px 0px',
+                  }}
+                  value={selectValue}
+
+                  onChange={(e) => setSelectValue(e.target.value)}
+              >
+                {
+                  catalogs.map((catalog: any) =>
+                      <Select.Option key={catalog.name} value={catalog.headerTag}>{catalog.name}</Select.Option>
+                  )
+                }
+              </Select>
+            </ButtonGroup>
+            <TextInput
+                style={{ width: '50%' }}
+                placeholder="Product (case-sensitive)"
+                onChange={handleChange}
+            />
+          </Flex>
+          <Box>
+            <Button
+                variant="positive"
+                onClick={async () => {
+                  // @ts-ignore
+                  sdk.close(Object.values(selectedProducts));
+                }}
+            >
+              Save products
+            </Button>
+          </Box>
+        </>}
     />
 
     <Workbench.Content style={{ height: '100%' }} type={'full'}>
       <Flex
-        fullHeight={true}
-        marginTop={"spacingM"}
-        marginBottom={"spacingM"}
-        gap="spacingS"
-        flexWrap="wrap"
-        alignItems={"center"}
-        justifyContent={'center'}
+          fullHeight={true}
+          marginTop={"spacingM"}
+          marginBottom={"spacingM"}
+          gap="spacingS"
+          flexWrap="wrap"
+          alignItems={"center"}
+          justifyContent={'center'}
       >
         {
           products.length ?
-            (products.map((product: any) =>
-              <Box key={product.id}
-                   style={{maxWidth: '200px'}}
-              >
-                <Card style={{ minHeight: 150 }}
-                      isSelected={!!selectedProducts[product.id]}
-                      onClick={() => selectProduct(product)}>
-                  <Flex flexDirection={"column"}>
-                    <Asset src={product.main_image.link.href} style={{height: '12em'}}/>
-                    <Text isTruncated={true} as={'span'} style={{width: '100%'}}>
-                      {product.name}
-                    </Text>
-                    <Text fontWeight={"fontWeightDemiBold"}>
-                      {product.sku}
-                    </Text>
-                  </Flex>
-                </Card>
-              </Box>)
-            ) : <Text fontSize={'fontSize2Xl'} fontColor={'gray400'}> No products found </Text>
+              <Pagination
+                  isLastPage={paging.total && (paging.total < (paging.offset + PAGE_SIZE) || paging.total < PAGE_SIZE)}
+                  activePage={paging.offset / PAGE_SIZE}
+                  onPageChange={handleChangePage}
+                  itemsPerPage={PAGE_SIZE}
+                  totalItems={paging.total}
+              />: null
         }
         {
           products.length ?
-            <Pagination
-              isLastPage={((dataPagination.meta.page.current * dataPagination.meta.page.limit) + dataPagination.meta.page.total) === dataPagination.meta.results.total}
-              activePage={dataPagination.meta.page.current - 1}
-              onPageChange={handleChangePage}
-              itemsPerPage={dataPagination.meta.page.limit}
-              totalItems={dataPagination.meta.results.total}
-            />: null
+              (products.map((product: any) =>
+                      <Box key={product.id}
+                           style={{maxWidth: '200px'}}
+                      >
+                        <Card style={{ minHeight: 150 }}
+                              isSelected={!!selectedProducts[product.id]}
+                              onClick={() => selectProduct(product)}>
+                          <Flex flexDirection={"column"}>
+                            <Asset src={product.main_image.link.href} style={{height: '12em'}}/>
+                            <Text isTruncated={true} as={'span'} style={{width: '100%'}}>
+                              {product.name}
+                            </Text>
+                            <Text fontWeight={"fontWeightDemiBold"}>
+                              {product.sku}
+                            </Text>
+                          </Flex>
+                        </Card>
+                      </Box>)
+              ) : <Text fontSize={'fontSize2Xl'} fontColor={'gray400'}> No products found </Text>
+        }
+        {
+          products.length ?
+              <Pagination
+                  isLastPage={paging.total && (paging.total < (paging.offset + PAGE_SIZE) || paging.total < PAGE_SIZE)}
+                  activePage={paging.offset / PAGE_SIZE}
+                  onPageChange={handleChangePage}
+                  itemsPerPage={PAGE_SIZE}
+                  totalItems={paging.total}
+              />: null
         }
       </Flex>
-      </Workbench.Content>
-    </Workbench>;
+    </Workbench.Content>
+  </Workbench>;
 };
 
 
