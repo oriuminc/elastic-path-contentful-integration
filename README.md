@@ -1,4 +1,4 @@
-This project was bootstrapped with [Create Contentful App](https://github.com/contentful/create-contentful-app).
+# TODO: update readme and add guide to setup EP connector... 
 
 ## Available Scripts
 
