@@ -17,7 +17,6 @@ import { DialogExtensionSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
 import {
   getCatalogProducts,
-  getNextProductPage,
   getProducts,
   mapCatalogProductWithMainImages,
 } from "../api/pxm";
@@ -25,6 +24,7 @@ import { EpFilterAttribute, EpFilterOperator } from "../types";
 import { useDebounce } from "usehooks-ts";
 import { initAxiosInterceptors } from "../helpers/authHelpers";
 import { EP_HOST } from "../constants";
+import { catalog } from "./ConfigScreen";
 
 const PAGE_SIZE = 10;
 
@@ -32,8 +32,8 @@ const PAGE_SIZE = 10;
 const Dialog = () => {
   const [value, setValue] = useState<string>("");
   const debouncedValue = useDebounce<string>(value, 500);
-  const [selectValue, setSelectValue] = useState("");
-  const [catalogs, setCatalogs] = useState<any[]>([]);
+  const [selectedCatalog, setCatalog] = useState<catalog>();
+  const [catalogs, setCatalogs] = useState<catalog[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<any>({});
   const [products, setProducts] = useState<any>([]);
   const [paging, setPaging] = useState({
@@ -60,7 +60,8 @@ const Dialog = () => {
           sku: product.sku,
           id: product.id,
           main_image: product.main_image,
-          catalogTag: selectValue,
+          catalogTag: selectedCatalog?.headerTag,
+          catalogChannel: selectedCatalog?.headerChannel,
         },
       });
     }
@@ -80,6 +81,8 @@ const Dialog = () => {
       value: name,
       limit,
       offset,
+      catalogTag: selectedCatalog?.headerTag,
+      catalogChannel: selectedCatalog?.headerChannel,
     });
 
     if (!data.total) return { products: [] };
@@ -88,7 +91,8 @@ const Dialog = () => {
       filterAttribute: EpFilterAttribute.SKU,
       filterOperator: EpFilterOperator.IN,
       values: data.products.map((product: any) => product.attributes.sku), // [data[51].attributes.sku, data[50].attributes.sku]
-      catalogTag: selectValue,
+      catalogTag: selectedCatalog?.headerTag,
+      catalogChannel: selectedCatalog?.headerChannel,
     });
 
     return {
@@ -121,14 +125,14 @@ const Dialog = () => {
     if (searchIsReady) {
       getProductResultsPage(debouncedValue, 0);
     }
-  }, [debouncedValue, searchIsReady, selectValue]);
+  }, [debouncedValue, searchIsReady, selectedCatalog]);
 
   useEffect(() => {
     initAxiosInterceptors({ host: EP_HOST });
     const catalogs = sdk.parameters.installation.catalogs;
     setCatalogs(catalogs);
     if (catalogs && catalogs[0]) {
-      setSelectValue(catalogs[0].headerTag);
+      setCatalog(catalogs[0]);
     }
     setSearchIsReady(true);
   }, []);
@@ -152,11 +156,15 @@ const Dialog = () => {
                   style={{
                     borderRadius: "0px 6px 6px 0px",
                   }}
-                  value={selectValue}
-                  onChange={(e) => setSelectValue(e.target.value)}
+                  value={selectedCatalog?.name}
+                  onChange={(e) =>
+                    setCatalog(
+                      catalogs.find((item) => item.name === e.target.value)
+                    )
+                  }
                 >
-                  {catalogs.map((catalog: any) => (
-                    <Select.Option key={catalog.name} value={catalog.headerTag}>
+                  {catalogs.map((catalog) => (
+                    <Select.Option key={catalog.name} value={catalog.name}>
                       {catalog.name}
                     </Select.Option>
                   ))}

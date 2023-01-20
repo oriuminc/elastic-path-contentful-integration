@@ -20,11 +20,17 @@ import { /* useCMA, */ useSDK } from "@contentful/react-apps-toolkit";
 import { PlusCircleIcon } from "@contentful/f36-icons";
 import { EP_HOST } from "../constants";
 
+export type catalog = {
+  headerChannel?: string;
+  headerTag?: string;
+  name: string;
+};
+
 export interface AppInstallationParameters {
   clientId?: string;
   clientSecret?: string;
   elasticPathHost?: string;
-  catalogs?: any[];
+  catalogs?: catalog[];
 }
 
 const ConfigScreen = () => {

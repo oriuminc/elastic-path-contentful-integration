@@ -58,11 +58,13 @@ export const getCatalogProducts = async ({
   filterOperator,
   values,
   catalogTag = "",
+  catalogChannel = "",
 }: {
   filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
   filterOperator: EpFilterOperator.EQ | EpFilterOperator.IN;
   values: string | string[];
   catalogTag?: string;
+  catalogChannel?: string;
 }) => {
   const filterUrl = buildFilter(values, filterAttribute, filterOperator);
 
@@ -72,7 +74,8 @@ export const getCatalogProducts = async ({
     `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&include=main_image`,
     {
       headers: {
-        "EP-Context-Tag": catalogTag,
+        ...(catalogTag && { "EP-Context-Tag": catalogTag }),
+        ...(catalogChannel && { "EP-Channel": catalogChannel }),
       },
     }
   );
@@ -110,11 +113,15 @@ export const getProducts = async ({
   value,
   limit = 10,
   offset = 0,
+  catalogTag = "",
+  catalogChannel = "",
 }: {
   filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
   value: string;
   limit?: number;
   offset?: number;
+  catalogTag?: string;
+  catalogChannel?: string;
 }) => {
   let filterUrl;
 
@@ -129,6 +136,10 @@ export const getProducts = async ({
       filter: value ? filterUrl : undefined,
       "page[limit]": limit,
       "page[offset]": offset,
+    },
+    headers: {
+      ...(catalogTag && { "EP-Context-Tag": catalogTag }),
+      ...(catalogChannel && { "EP-Channel": catalogChannel }),
     },
   });
 
