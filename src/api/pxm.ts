@@ -1,15 +1,8 @@
 import axios from "axios";
 import qs from "qs";
 
+import { EP_HOST, EP_CLIENT_ID } from "../constants";
 import {
-  EP_HOST,
-  EP_CLIENT_ID,
-  ELASTIC_PATH_DEFAULT_CHANNEL,
-} from "../constants";
-import {
-  EpCollectionResponse,
-  FlatProduct,
-  EpProductInterface,
   EpAccessTokenInterface,
   ImplicitToken,
   EpFilterOperator,
@@ -17,11 +10,15 @@ import {
   BuildFilterProps,
 } from "../types";
 
-export const getAccessToken = async ({ clientId, clientSecret, storeId }: any) => {
+export const getAccessToken = async ({
+  clientId,
+  clientSecret,
+  storeId,
+}: any) => {
   const data = qs.stringify({
     client_id: clientId,
     client_secret: clientSecret,
-    grant_type: clientSecret ? 'client_credentials' : 'implicit'
+    grant_type: clientSecret ? "client_credentials" : "implicit",
   });
 
   const headers = {
@@ -35,7 +32,7 @@ export const getAccessToken = async ({ clientId, clientSecret, storeId }: any) =
       {
         headers: {
           ...headers,
-        }
+        },
       }
     );
     return res.data;
@@ -60,22 +57,26 @@ export const getCatalogProducts = async ({
   filterAttribute,
   filterOperator,
   values,
-  catalogTag = ''
+  catalogTag = "",
+  catalogChannel = "",
 }: {
   filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
   filterOperator: EpFilterOperator.EQ | EpFilterOperator.IN;
   values: string | string[];
   catalogTag?: string;
+  catalogChannel?: string;
 }) => {
   const filterUrl = buildFilter(values, filterAttribute, filterOperator);
 
   // TODO: type?
   // EpCollectionResponse<EpProductInterface[]>
   const products: any = await axios.get(
-    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&include=main_image`, {
+    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&include=main_image`,
+    {
       headers: {
-        'EP-Context-Tag': catalogTag,
-      }
+        ...(catalogTag && { "EP-Context-Tag": catalogTag }),
+        ...(catalogChannel && { "EP-Channel": catalogChannel }),
+      },
     }
   );
 
@@ -86,34 +87,41 @@ export const getNextProductPage = async (url: string) => {
   const { data }: any = await axios.get(url);
 
   return data;
-}
+};
 
-
-export const mapCatalogProductWithMainImages = (products: any, included: any) => {
+export const mapCatalogProductWithMainImages = (
+  products: any,
+  included: any
+) => {
   const mainImagesById = included?.main_images.reduce(
-    (obj: any, item: any) => Object.assign(obj, { [item.id]: {...item} }), {}
+    (obj: any, item: any) => Object.assign(obj, { [item.id]: { ...item } }),
+    {}
   );
 
-  return products ? products.map(
-    (product: any) => ({
-      ...product.attributes,
-      id: product.id,
-      main_image: mainImagesById[product.relationships.main_image.data.id]
-    })
-  ) : [];
-}
+  return products
+    ? products.map((product: any) => ({
+        ...product.attributes,
+        id: product.id,
+        main_image: mainImagesById[product.relationships.main_image.data.id],
+      }))
+    : [];
+};
 
 // TOOD: Typing and filter rules
 export const getProducts = async ({
-                                    filterAttribute,
-                                    value,
-    limit = 10,
-    offset = 0,
+  filterAttribute,
+  value,
+  limit = 10,
+  offset = 0,
+  catalogTag = "",
+  catalogChannel = "",
 }: {
-  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME
-  value: string
-  limit?: number
-  offset?: number
+  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
+  value: string;
+  limit?: number;
+  offset?: number;
+  catalogTag?: string;
+  catalogChannel?: string;
 }) => {
   let filterUrl;
 
@@ -126,13 +134,17 @@ export const getProducts = async ({
   const response: any = await axios.get(`${EP_HOST}/pcm/products`, {
     params: {
       filter: value ? filterUrl : undefined,
-      'page[limit]': limit,
-      'page[offset]': offset,
-    }
-  })
+      "page[limit]": limit,
+      "page[offset]": offset,
+    },
+    headers: {
+      ...(catalogTag && { "EP-Context-Tag": catalogTag }),
+      ...(catalogChannel && { "EP-Channel": catalogChannel }),
+    },
+  });
 
   return {
     products: response?.data?.data || [],
-    total: response?.data?.meta?.results?.total || 0
-  }
+    total: response?.data?.meta?.results?.total || 0,
+  };
 };

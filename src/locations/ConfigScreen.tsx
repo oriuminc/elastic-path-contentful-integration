@@ -17,13 +17,20 @@ import {
 } from "@contentful/f36-components";
 import { css } from "emotion";
 import { /* useCMA, */ useSDK } from "@contentful/react-apps-toolkit";
-import {PlusCircleIcon} from "@contentful/f36-icons";
+import { PlusCircleIcon } from "@contentful/f36-icons";
+import { EP_HOST } from "../constants";
+
+export type catalog = {
+  headerChannel?: string;
+  headerTag?: string;
+  name: string;
+};
 
 export interface AppInstallationParameters {
   clientId?: string;
   clientSecret?: string;
   elasticPathHost?: string;
-  catalogs?: any[];
+  catalogs?: catalog[];
 }
 
 const ConfigScreen = () => {
@@ -80,7 +87,7 @@ const ConfigScreen = () => {
   }, [sdk]);
 
   const submitForm = async (e: any) => {
-    const { catalogName , headerTag, headerChannel } = e.target.elements;
+    const { catalogName, headerTag, headerChannel } = e.target.elements;
 
     setParameters({
       ...parameters,
@@ -89,9 +96,9 @@ const ConfigScreen = () => {
         {
           name: catalogName.value,
           headerTag: headerTag.value,
-          headerChannel: headerChannel.value
-        }
-      ]
+          headerChannel: headerChannel.value,
+        },
+      ],
     });
 
     setShown(false);
@@ -102,23 +109,21 @@ const ConfigScreen = () => {
     newCatalogs.splice(index, 1);
     setParameters({
       ...parameters,
-      catalogs: newCatalogs
+      catalogs: newCatalogs,
     });
   };
 
   return (
-    <Box className={css({ margin: '80px' })} style={{ width: '60%'}}>
+    <Box className={css({ margin: "80px" })} style={{ width: "60%" }}>
       <Form>
         <Heading>App Config</Heading>
         <Paragraph>
-          Enter your Elastic Path configuration in order to fetch products to be linked on your
-          content.
+          Enter your Elastic Path configuration in order to fetch products to be
+          linked on your content.
         </Paragraph>
 
         <FormControl>
-          <FormLabel isRequired>
-            ElasticPath Client ID
-          </FormLabel>
+          <FormLabel isRequired>ElasticPath Client ID</FormLabel>
           <TextInput
             name="clientId"
             id="clientId"
@@ -126,7 +131,7 @@ const ConfigScreen = () => {
             onChange={(e) => {
               setParameters({
                 ...parameters,
-                clientId: e.target.value
+                clientId: e.target.value,
               });
             }}
           />
@@ -136,9 +141,7 @@ const ConfigScreen = () => {
         </FormControl>
 
         <FormControl>
-          <FormLabel isRequired>
-            ElasticPath Client Secret
-          </FormLabel>
+          <FormLabel isRequired>ElasticPath Client Secret</FormLabel>
           <TextInput
             value={parameters.clientSecret || ""}
             name="clientSecret"
@@ -146,7 +149,7 @@ const ConfigScreen = () => {
             onChange={(e) => {
               setParameters({
                 ...parameters,
-                clientSecret: e.target.value
+                clientSecret: e.target.value,
               });
             }}
           />
@@ -156,52 +159,48 @@ const ConfigScreen = () => {
         </FormControl>
 
         <FormControl>
-          <FormLabel isRequired>
-            ElasticPath host url
-          </FormLabel>
-          <TextInput
-            name="host"
-            id="host"
-            defaultValue={'https://useast.api.elasticpath.com'}
-          />
-          <HelpText>
-            Copy your ElasticPath host url and enter it here.
-          </HelpText>
+          <FormLabel isRequired>ElasticPath host url</FormLabel>
+          <TextInput name="host" id="host" defaultValue={EP_HOST} />
+          <HelpText>Copy your ElasticPath host url and enter it here.</HelpText>
         </FormControl>
 
-
         <FormControl>
-          <FormLabel>
-            Catalogs
-          </FormLabel>
+          <FormLabel>Catalogs</FormLabel>
 
-          {
-            parameters.catalogs?.map((catalog: any, index: number) =>
-              <Box
-                key={index}
-                marginTop={'spacingXs'}
-                marginBottom={'spacingXs'}
-              >
-                <EntityListItem
-                  actions={[<MenuItem onClick={() => removeCatalog(index)}>Remove</MenuItem>]}
-                  withThumbnail={false}
-                  title={catalog.name}
-                  description={`
-                    ${catalog.headerTag ? `Header Tag: ${catalog.headerTag}` : ''}  
-                    ${catalog.headerChannel ? `, Header Channel: ${catalog.headerChannel}` : ''}
+          {parameters.catalogs?.map((catalog: any, index: number) => (
+            <Box key={index} marginTop={"spacingXs"} marginBottom={"spacingXs"}>
+              <EntityListItem
+                actions={[
+                  <MenuItem onClick={() => removeCatalog(index)}>
+                    Remove
+                  </MenuItem>,
+                ]}
+                withThumbnail={false}
+                title={catalog.name}
+                description={`
+                    ${
+                      catalog.headerTag
+                        ? `Header Tag: ${catalog.headerTag}`
+                        : ""
+                    }  
+                    ${
+                      catalog.headerChannel
+                        ? `, Header Channel: ${catalog.headerChannel}`
+                        : ""
+                    }
                   `}
-                />
-              </Box>
-            )
-          }
+              />
+            </Box>
+          ))}
 
-          <Box marginTop={'spacingM'}>
+          <Box marginTop={"spacingM"}>
             <IconButton
               onClick={() => setShown(true)}
               variant="positive"
               title="Add products"
               aria-label="Select the date"
-              icon={<PlusCircleIcon />}>
+              icon={<PlusCircleIcon />}
+            >
               Add Catalog
             </IconButton>
           </Box>
@@ -220,27 +219,24 @@ const ConfigScreen = () => {
               <Modal.Content>
                 <Form onSubmit={submitForm}>
                   <FormControl>
-                    <FormControl.Label isRequired>Catalog Name</FormControl.Label>
-                    <TextInput
-                      maxLength={20}
-                      name="catalogName"
-                    />
+                    <FormControl.Label isRequired>
+                      Catalog Name
+                    </FormControl.Label>
+                    <TextInput maxLength={20} name="catalogName" />
                   </FormControl>
                   <FormControl>
                     <FormControl.Label>Header Tag</FormControl.Label>
-                    <TextInput
-                      maxLength={20}
-                      name="headerTag"
-                    />
+                    <TextInput maxLength={20} name="headerTag" />
                   </FormControl>
                   <FormControl>
                     <FormControl.Label>Header Channel</FormControl.Label>
-                    <TextInput
-                      maxLength={20}
-                      name="headerChannel"
-                    />
+                    <TextInput maxLength={20} name="headerChannel" />
                   </FormControl>
-                  <Button variant="positive" type="submit" style={{ float: 'right'}}>
+                  <Button
+                    variant="positive"
+                    type="submit"
+                    style={{ float: "right" }}
+                  >
                     Add Catalog
                   </Button>
                 </Form>
@@ -248,7 +244,6 @@ const ConfigScreen = () => {
             </>
           )}
         </Modal>
-
       </Form>
     </Box>
   );
