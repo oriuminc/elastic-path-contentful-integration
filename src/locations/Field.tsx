@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -11,11 +10,9 @@ import {
   Flex,
   Asset,
 } from "@contentful/f36-components";
-
 import { PlusCircleIcon, DeleteIcon, CloseIcon } from "@contentful/f36-icons";
 import { FieldExtensionSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
-
 import {
   closestCenter,
   DndContext,
@@ -23,13 +20,11 @@ import {
   PointerSensor,
   useSensor,
 } from "@dnd-kit/core";
-
 import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-
 import Draggable from "../components/Draggable";
 import {
   getAccessToken,
@@ -73,6 +68,7 @@ const Field = () => {
       .then(async () => {
         await syncDataProducts();
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncDataProducts = async () => {
