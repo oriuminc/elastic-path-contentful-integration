@@ -30,6 +30,8 @@ const PAGE_SIZE = 10;
 
 // @ts-ignore
 const Dialog = () => {
+  const sdk = useSDK<DialogExtensionSDK>();
+  const singleSelect = (sdk.parameters.invocation as any).singleSelect || false;
   const [value, setValue] = useState<string>("");
   const debouncedValue = useDebounce<string>(value, 500);
   const [selectedCatalog, setCatalog] = useState<catalog>();
@@ -46,14 +48,22 @@ const Dialog = () => {
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
   };
-  const sdk = useSDK<DialogExtensionSDK>();
 
   const selectProduct = (product: any) => {
     if (selectedProducts[product.id]) {
       const { [product.id]: _, ...rest } = selectedProducts;
       setSelectedProducts(rest);
     } else {
-      setSelectedProducts({
+      const newSelection = singleSelect ? {
+        [product.id]: {
+          name: product.name,
+          sku: product.sku,
+          id: product.id,
+          main_image: product.main_image,
+          catalogTag: selectedCatalog?.headerTag,
+          catalogChannel: selectedCatalog?.headerChannel,
+        }
+      } : {
         ...selectedProducts,
         [product.id]: {
           name: product.name,
@@ -63,7 +73,8 @@ const Dialog = () => {
           catalogTag: selectedCatalog?.headerTag,
           catalogChannel: selectedCatalog?.headerChannel,
         },
-      });
+      }
+      setSelectedProducts(newSelection);
     }
   };
 

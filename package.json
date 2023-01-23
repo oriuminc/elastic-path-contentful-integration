@@ -1,5 +1,5 @@
 {
-  "name": "EP-Connector-App",
+  "name": "ep-connector-app",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

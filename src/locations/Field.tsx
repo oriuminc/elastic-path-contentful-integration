@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from "react";
-
+import { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -11,11 +10,9 @@ import {
   Flex,
   Asset,
 } from "@contentful/f36-components";
-
 import { PlusCircleIcon, DeleteIcon, CloseIcon } from "@contentful/f36-icons";
 import { FieldExtensionSDK } from "@contentful/app-sdk";
 import { useSDK } from "@contentful/react-apps-toolkit";
-
 import {
   closestCenter,
   DndContext,
@@ -23,13 +20,11 @@ import {
   PointerSensor,
   useSensor,
 } from "@dnd-kit/core";
-
 import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-
 import Draggable from "../components/Draggable";
 import {
   getAccessToken,
@@ -41,10 +36,20 @@ import { initAxiosInterceptors, setToken } from "../helpers/authHelpers";
 import { EP_HOST } from "../constants";
 
 const Field = () => {
+  const sdk = useSDK<FieldExtensionSDK>();
+  // if its Symbol means only one value, if JSON takes multiple values
+  const singleSelect = sdk.field.type === 'Symbol';
   const [currentProducts, setCurrentProducts] = useState<any[]>([]);
   const sensors = [useSensor(PointerSensor)];
-
-  const sdk = useSDK<FieldExtensionSDK>();
+  
+  const setFieldValue = (products: any[]) => {
+    return sdk.field.setValue(singleSelect ? products[0].sku : products)
+  }
+  
+  const getFieldValue = () => {
+    const data = sdk.field.getValue();
+    return singleSelect ? [{ sku: data, id: data }] : data
+  }
 
   useEffect(() => {
     // adjust the contentful field to the pxm field
@@ -63,11 +68,11 @@ const Field = () => {
       .then(async () => {
         await syncDataProducts();
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncDataProducts = async () => {
-    const currentProducts = sdk.entry.fields.products.getValue();
-
+    const currentProducts = getFieldValue();
     if (currentProducts && currentProducts.length) {
       // Getting the product details from EP in case some was updated
       const { data: products, included } = await getCatalogProducts({
@@ -81,34 +86,31 @@ const Field = () => {
         products,
         included
       );
-      const updatedProducts = currentProducts.map((product: any) => {
-        const newData = productsWithImage.find((p: any) => p.id === product.id);
-        return {
-          ...newData,
-        };
-      });
 
-      // @ts-ignore
-      setCurrentProducts(updatedProducts);
+      if (singleSelect) {
+        setCurrentProducts(productsWithImage);
+      } else {
+        const updatedProducts = currentProducts.map((product: any) => {
+          const newData = productsWithImage.find((p: any) => p.id === product.id);
+          return {
+            ...newData,
+          };
+        });
+        // @ts-ignore
+        setCurrentProducts(updatedProducts);
+      }
     }
   };
 
   const removeAllProducts = async () => {
-    sdk.entry.fields.products.setValue([]);
+    singleSelect ? sdk.field.setValue('') : sdk.field.setValue([])
     setCurrentProducts([]);
   };
 
   const removeProduct = async (productId: any) => {
-    const currentProducts = sdk.entry.fields.products.getValue();
-
-    const newProducts = currentProducts.filter(
-      (product: any) => product.id !== productId
-    );
-
-    const products = (await sdk.entry.fields.products.setValue([
-      ...newProducts,
-    ])) as any;
-
+    const currentProducts = getFieldValue();
+    const newProducts = currentProducts.filter((product: any) => product.id !== productId)
+    const products = await setFieldValue([...newProducts]) as any;
     setCurrentProducts([...products]);
   };
 
@@ -125,7 +127,7 @@ const Field = () => {
         const newOrder = arrayMove(currentProducts, oldIndex, newIndex);
 
         setCurrentProducts(newOrder);
-        sdk.entry.fields.products.setValue(newOrder);
+        setFieldValue(newOrder);
       }
     }
   }
@@ -136,19 +138,65 @@ const Field = () => {
       minHeight: "70vh",
       shouldCloseOnOverlayClick: true,
       shouldCloseOnEscapePress: true,
+      parameters: {
+        singleSelect
+      }
     });
 
-    const currentProducts = sdk.entry.fields.products.getValue();
-
-    // @ts-ignore
-    const allProducts = await sdk.entry.fields.products.setValue([
-      ...(currentProducts ?? []),
-      ...(selectedProducts ?? []),
-    ]);
-
-    // @ts-ignore
-    setCurrentProducts([...allProducts]);
+    if (singleSelect) {
+      await setFieldValue(selectedProducts);
+      setCurrentProducts(selectedProducts);
+    } else {
+      const currentProducts = getFieldValue();
+      // @ts-ignore
+      const allProducts = await setFieldValue([
+        ...(currentProducts ?? []),
+        ...(selectedProducts ?? []),
+      ]);
+      // @ts-ignore
+      setCurrentProducts([...allProducts]);
+    }
   }
+
+  const actionButtons =
+  singleSelect ?
+    currentProducts.length > 0 ?
+      <IconButton
+        onClick={removeAllProducts}
+        variant="negative"
+        title="Clean"
+        aria-label="Select the date"
+        icon={<DeleteIcon />}>
+        Clean
+      </IconButton>
+      :
+
+      <IconButton
+        onClick={addProducts}
+        variant="positive"
+        title="Pick a Product"
+        aria-label="Select the date"
+        icon={<PlusCircleIcon />}>
+        Add Product
+      </IconButton>
+    :
+    <>
+      <IconButton
+        onClick={addProducts}
+        variant="positive"
+        title="Add products"
+        aria-label="Select the date"
+        icon={<PlusCircleIcon />}>
+        Add Product
+      </IconButton><IconButton
+        onClick={removeAllProducts}
+        variant="negative"
+        title="Clean products"
+        aria-label="Select the date"
+        icon={<DeleteIcon />}>
+        Clean
+      </IconButton>
+    </>
 
   return (
     <Box>
@@ -156,27 +204,8 @@ const Field = () => {
         <Flex
           fullWidth={true}
           justifyContent={"space-between"}
-          gap={"spacingS"}
-        >
-          <IconButton
-            onClick={addProducts}
-            variant="positive"
-            title="Add products"
-            aria-label="Select the date"
-            icon={<PlusCircleIcon />}
-          >
-            Add Product
-          </IconButton>
-
-          <IconButton
-            onClick={removeAllProducts}
-            variant="negative"
-            title="Clean products"
-            aria-label="Select the date"
-            icon={<DeleteIcon />}
-          >
-            Clean
-          </IconButton>
+          gap={"spacingS"} >
+            { actionButtons }
         </Flex>
       </Stack>
 
@@ -197,7 +226,7 @@ const Field = () => {
                 ({ listeners, attributes, isDragging }) => (
                   <Card
                     padding={"none"}
-                    withDragHandle
+                    withDragHandle={!singleSelect}
                     dragHandleRender={() => (
                       <DragHandle {...listeners} {...attributes} />
                     )}
@@ -225,7 +254,7 @@ const Field = () => {
                           </Text>
                         </Flex>
                       </Flex>
-                      <Box
+                      {!singleSelect && <Box
                         style={{
                           textAlign: "right",
                           width: "20%",
@@ -237,7 +266,7 @@ const Field = () => {
                           variant={"muted"}
                           onClick={() => removeProduct(product.id)}
                         />
-                      </Box>
+                      </Box>}
                     </Flex>
                   </Card>
                 )
