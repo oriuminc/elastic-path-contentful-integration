@@ -43,7 +43,7 @@
 
 ### Use EP connector (custom app already uploaded)
 
-##### JSON Field
+### JSON Field
 When using a JSON field a relationship is 1 entry to many products
 
   - create a new `content model` for EP connector or add the EP connector as a new `Object` field to another existing content model
@@ -57,7 +57,7 @@ When using a JSON field a relationship is 1 entry to many products
     - Step 4: Pick products and save
     ![pick products and save](public/img/pick-products-and-save.png "pick products and save") 
 
-##### Text Field
+### Text Field
 When using a JSON field a relationship is 1 entry to 1 product
 I.E: We are using Contentful to add extra information to the product page. We need to be able to query a contentful entry based on the product SKU. Using a text field will allow us to do GrapQL queries using SKU
 ```
