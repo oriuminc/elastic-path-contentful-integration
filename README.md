@@ -42,6 +42,10 @@
     ![save the app app](public/img/use-upload-and-host-by-contentful.png "save the app")
 
 ### Use EP connector (custom app already uploaded)
+
+##### JSON Field
+When using a JSON field a relationship is 1 entry to many products
+
   - create a new `content model` for EP connector or add the EP connector as a new `Object` field to another existing content model
     - Step 1: Create `products` field (name/id must be `products`), type is `Object`
     ![new products field](public/img/products-field-types.png "new products field")
@@ -52,5 +56,27 @@
     ![add entry](public/img/add-entry.png "add entry")
     - Step 4: Pick products and save
     ![pick products and save](public/img/pick-products-and-save.png "pick products and save") 
+
+##### Text Field
+When using a JSON field a relationship is 1 entry to 1 product
+I.E: We are using Contentful to add extra information to the product page. We need to be able to query a contentful entry based on the product SKU. Using a text field will allow us to do GrapQL queries using SKU
+```
+query {
+  pageProductCollection(where:{skuReference: "1111"}){
+    items{
+      sys{id}
+    }
+  }
+}
+skuReference is the name taken for the custom field
+```
+1. Create new Field with type `Text`
+![product field text](public/img/product-field-text.png "product field text")
+2. Assign `Appearance` to use the EP App
+![text field appearance](public/img/text-field-appearance.png "text field appearance")
+3. as the example above, add it to the product you will see it show on product page.
+![product field display](public/img/product-field-display.png "product field display")
+
+Also, you should be able to search the collection by SKU
 
 ### Notes: make sure to update the `catalog` list in the app config, this will directly affect the search result.
