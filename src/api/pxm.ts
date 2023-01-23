@@ -1,7 +1,7 @@
 import axios from "axios";
 import qs from "qs";
 
-import { EP_HOST, EP_CLIENT_ID } from "../constants";
+import { EP_HOST } from "../constants";
 import {
   EpAccessTokenInterface,
   ImplicitToken,
