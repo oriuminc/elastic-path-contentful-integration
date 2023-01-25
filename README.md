@@ -1,14 +1,15 @@
 # About the Contentful ElasticPath integration
 
-The Contentful-ElasticPath integration lets you link products by their Name or SKU, to entries in Contentful. The Products must be `live and published` in ElasticPath. This integration authenticates to ElasticPath using an implicit token using your ElasticPath api Client ID.
+The Contentful-ElasticPath integration lets you link products by their Name or SKU, to entries in Contentful. The Products and Catalogs must be `live and published` in ElasticPath. This integration authenticates to ElasticPath using an implicit token using your ElasticPath api Client ID.
+
+```Note: v2 of this connector supports only the PXM product catalog in ElasticPath. For Legacy API support, see v1.```
 
 Products that are linked from Elastic Path can be easily previewed via the Contentful web app, making it easier for content editors to use the most recently uploaded products across catalogs and sites.
 
 ### Features:
 
 - Link one or more ElasticPath products, by Product Id or SKU, inside Contentful content.
-- Full-text search for products in ElasticPath when using legacy product api integration
-- PCM Catalog integration supports filtering by loading _all_ PCM products and filtering locally in your browser. This may be a performance issue depending on the size of your Catalog. This is a limitation of PCM Catalog api as it does not support filtering. See https://github.com/myplanet/elastic-path-contentful-integration/issues/1
+- Filtering by Catalog integration supports filtering by loading _all_ PCM products and filtering locally in your browser. This may be a performance issue depending on the size of your Catalog. This is a limitation of PCM Catalog api as it does not support filtering. See https://github.com/myplanet/elastic-path-contentful-integration/issues/1
 - Preview selected products in Contentful
 
 # Installation Steps
