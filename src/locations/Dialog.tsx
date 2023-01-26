@@ -140,7 +140,7 @@ const Dialog = () => {
 
   useEffect(() => {
     initAxiosInterceptors({ host: EP_HOST });
-    const catalogs = sdk.parameters.installation.catalogs;
+    const catalogs = sdk.parameters.installation.catalogs || [];
     setCatalogs(catalogs);
     if (catalogs && catalogs[0]) {
       setCatalog(catalogs[0]);
@@ -159,28 +159,30 @@ const Dialog = () => {
               style={{ width: "50%" }}
               gap={"spacingXs"}
             >
-              <ButtonGroup>
-                <Button variant="primary">Catalog</Button>
-                <Select
-                  id="optionSelect-controlled"
-                  name="optionSelect-controlled"
-                  style={{
-                    borderRadius: "0px 6px 6px 0px",
-                  }}
-                  value={selectedCatalog?.name}
-                  onChange={(e) =>
-                    setCatalog(
-                      catalogs.find((item) => item.name === e.target.value)
-                    )
-                  }
-                >
-                  {catalogs.map((catalog) => (
-                    <Select.Option key={catalog.name} value={catalog.name}>
-                      {catalog.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              </ButtonGroup>
+              {catalogs.length > 0 &&
+                <ButtonGroup>
+                  <Button variant="primary">Catalog</Button>
+                  <Select
+                    id="optionSelect-controlled"
+                    name="optionSelect-controlled"
+                    style={{
+                      borderRadius: "0px 6px 6px 0px",
+                    }}
+                    value={selectedCatalog?.name}
+                    onChange={(e) =>
+                      setCatalog(
+                        catalogs.find((item) => item.name === e.target.value)
+                      )
+                    }
+                  >
+                    {catalogs.map((catalog) => (
+                      <Select.Option key={catalog.name} value={catalog.name}>
+                        {catalog.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </ButtonGroup>
+              }
               <TextInput
                 style={{ width: "50%" }}
                 placeholder="Product (case-sensitive)"
