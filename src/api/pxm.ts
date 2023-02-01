@@ -102,7 +102,7 @@ export const mapCatalogProductWithMainImages = (
     ? products.map((product: any) => ({
         ...product.attributes,
         id: product.id,
-        main_image: mainImagesById[product.relationships.main_image.data.id],
+        main_image: mainImagesById ? mainImagesById[product?.relationships?.main_image?.data?.id] || '' : '',
       }))
     : [];
 };
