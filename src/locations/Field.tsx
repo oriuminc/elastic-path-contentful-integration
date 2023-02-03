@@ -43,12 +43,12 @@ const Field = () => {
   const sensors = [useSensor(PointerSensor)];
   
   const setFieldValue = (products: any[]) => {
-    return sdk.field.setValue(singleSelect ? products[0].sku : products)
+    return sdk.field.setValue(singleSelect ? JSON.stringify(products) : products)
   }
-  
+
   const getFieldValue = () => {
     const data = sdk.field.getValue();
-    return singleSelect ? [{ sku: data, id: data }] : data
+    return singleSelect ? JSON.parse(data) : data
   }
 
   useEffect(() => {
@@ -73,14 +73,17 @@ const Field = () => {
 
   const syncDataProducts = async () => {
     const currentProducts = getFieldValue();
+    const {catalogChannel, catalogTag} = currentProducts[0] || {catalogChannel: '', catalogTag: ''}
     if (currentProducts && currentProducts.length) {
       // Getting the product details from EP in case some was updated
       const { data: products, included } = await getCatalogProducts({
         filterAttribute: EpFilterAttribute.SKU,
         filterOperator: EpFilterOperator.IN,
         values: currentProducts.map((product: any) => product.sku),
+        catalogTag,
+        catalogChannel,
       });
-
+      
       // EP is not returning the products in the order we have specified in the in filter
       const productsWithImage = mapCatalogProductWithMainImages(
         products,
