@@ -84,7 +84,7 @@ Products that are linked from Elastic Path can be easily previewed via the Conte
 
   I.E: We are using Contentful to add extra information to the product page. We need to be able to query a contentful entry based on the product SKU. Using a text field will allow us to do GrapQL queries using SKU
 
-  Also the plugin will update a slug field if existing to be the SKU number
+  Also the plugin will update a slug field, if existing, to be `product/SKU-number`
 
   ```
   query {
