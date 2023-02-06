@@ -44,7 +44,7 @@ const Field = () => {
 
   const setFieldValue = (products: any[]) => {
     try {
-      sdk.entry.fields.slug.setValue(products[0].sku)
+      sdk.entry.fields.slug.setValue(`product/${products[0].sku}`)
     } catch (e) { }
 
     return sdk.field.setValue(singleSelect ? JSON.stringify(products) : products)
