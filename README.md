@@ -83,9 +83,12 @@ Products that are linked from Elastic Path can be easily previewed via the Conte
   When using a JSON field a relationship is 1 entry to 1 product
 
   I.E: We are using Contentful to add extra information to the product page. We need to be able to query a contentful entry based on the product SKU. Using a text field will allow us to do GrapQL queries using SKU
+
+  Also the plugin will update a slug field if existing to be the SKU number
+
   ```
   query {
-    pageProductCollection(where:{skuReference: "1111"}){
+    pageProductCollection(where:{realSku_contains: "1111"}){
       items{
         sys{id}
       }
@@ -95,10 +98,13 @@ Products that are linked from Elastic Path can be easily previewed via the Conte
   ```
   1. Create new Field with type `Text`
   ![product field text](public/img/product-field-text.png "product field text")
-  1. Assign `Appearance` to use the EP App
+  2. Assign `Appearance` to use the EP App
   ![text field appearance](public/img/text-field-appearance.png "text field appearance")
-  1. as the example above, add it to the product you will see it show on product page.
+  3. as the example above, add it to the product you will see it show on product page.
   ![product field display](public/img/product-field-display.png "product field display")
+
+  Note: if SLUG field exists, it will get updated. Composable uses `/product/<slug>` to fetch products. In the case of elasticpath the slug is the product sku
+
 
   Also, you should be able to search the collection by SKU
 

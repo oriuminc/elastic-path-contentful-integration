@@ -41,8 +41,12 @@ const Field = () => {
   const singleSelect = sdk.field.type === 'Symbol';
   const [currentProducts, setCurrentProducts] = useState<any[]>([]);
   const sensors = [useSensor(PointerSensor)];
-  
+
   const setFieldValue = (products: any[]) => {
+    try {
+      sdk.entry.fields.slug.setValue(products[0].sku)
+    } catch (e) { }
+
     return sdk.field.setValue(singleSelect ? JSON.stringify(products) : products)
   }
 
@@ -68,12 +72,12 @@ const Field = () => {
       .then(async () => {
         await syncDataProducts();
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncDataProducts = async () => {
     const currentProducts = getFieldValue();
-    const {catalogChannel, catalogTag} = currentProducts[0] || {catalogChannel: '', catalogTag: ''}
+    const { catalogChannel, catalogTag } = currentProducts[0] || { catalogChannel: '', catalogTag: '' }
     if (currentProducts && currentProducts.length) {
       // Getting the product details from EP in case some was updated
       const { data: products, included } = await getCatalogProducts({
@@ -83,7 +87,7 @@ const Field = () => {
         catalogTag,
         catalogChannel,
       });
-      
+
       // EP is not returning the products in the order we have specified in the in filter
       const productsWithImage = mapCatalogProductWithMainImages(
         products,
@@ -92,6 +96,7 @@ const Field = () => {
 
       if (singleSelect) {
         setCurrentProducts(productsWithImage);
+        setFieldValue(productsWithImage)
       } else {
         const updatedProducts = currentProducts.map((product: any) => {
           const newData = productsWithImage.find((p: any) => p.id === product.id);
@@ -162,44 +167,44 @@ const Field = () => {
   }
 
   const actionButtons =
-  singleSelect ?
-    currentProducts.length > 0 ?
-      <IconButton
-        onClick={removeAllProducts}
-        variant="negative"
-        title="Clean"
-        aria-label="Select the date"
-        icon={<DeleteIcon />}>
-        Clean
-      </IconButton>
-      :
+    singleSelect ?
+      currentProducts.length > 0 ?
+        <IconButton
+          onClick={removeAllProducts}
+          variant="negative"
+          title="Clean"
+          aria-label="Select the date"
+          icon={<DeleteIcon />}>
+          Clean
+        </IconButton>
+        :
 
-      <IconButton
-        onClick={addProducts}
-        variant="positive"
-        title="Pick a Product"
-        aria-label="Select the date"
-        icon={<PlusCircleIcon />}>
-        Add Product
-      </IconButton>
-    :
-    <>
-      <IconButton
-        onClick={addProducts}
-        variant="positive"
-        title="Add products"
-        aria-label="Select the date"
-        icon={<PlusCircleIcon />}>
-        Add Product
-      </IconButton><IconButton
-        onClick={removeAllProducts}
-        variant="negative"
-        title="Clean products"
-        aria-label="Select the date"
-        icon={<DeleteIcon />}>
-        Clean
-      </IconButton>
-    </>
+        <IconButton
+          onClick={addProducts}
+          variant="positive"
+          title="Pick a Product"
+          aria-label="Select the date"
+          icon={<PlusCircleIcon />}>
+          Add Product
+        </IconButton>
+      :
+      <>
+        <IconButton
+          onClick={addProducts}
+          variant="positive"
+          title="Add products"
+          aria-label="Select the date"
+          icon={<PlusCircleIcon />}>
+          Add Product
+        </IconButton><IconButton
+          onClick={removeAllProducts}
+          variant="negative"
+          title="Clean products"
+          aria-label="Select the date"
+          icon={<DeleteIcon />}>
+          Clean
+        </IconButton>
+      </>
 
   return (
     <Box>
@@ -208,7 +213,7 @@ const Field = () => {
           fullWidth={true}
           justifyContent={"space-between"}
           gap={"spacingS"} >
-            { actionButtons }
+          {actionButtons}
         </Flex>
       </Stack>
 
