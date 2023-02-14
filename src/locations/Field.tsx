@@ -46,8 +46,20 @@ const Field = () => {
     try {
       sdk.entry.fields.slug.setValue(`product/${products[0].sku}`)
     } catch (e) { }
+    if (singleSelect) {
+      const saveObject = products.map((p) => {
+        return {
+          catalogChannel: p.catalogChannel || '',
+          catalogTag: p.catalogTag || '',
+          id: p.id,
+          sku: p.sku,
+        }
+      })
+      return sdk.field.setValue(JSON.stringify(saveObject))
 
-    return sdk.field.setValue(singleSelect ? JSON.stringify(products) : products)
+    } else {
+      return sdk.field.setValue(products)
+    }
   }
 
   const getFieldValue = () => {
@@ -93,10 +105,8 @@ const Field = () => {
         products,
         included
       );
-
       if (singleSelect) {
         setCurrentProducts(productsWithImage);
-        setFieldValue(productsWithImage)
       } else {
         const updatedProducts = currentProducts.map((product: any) => {
           const newData = productsWithImage.find((p: any) => p.id === product.id);
