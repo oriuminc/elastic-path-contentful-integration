@@ -45,7 +45,10 @@ const Field = () => {
   const setFieldValue = (products: any[]) => {
     try {
       sdk.entry.fields.slug.setValue(`product/${products[0].sku}`)
-    } catch (e) { }
+    } catch (e) { console.error('no slug field') }
+    try {
+      sdk.entry.fields.epUUID.setValue(`${products[0].id}`)
+    } catch (e) { console.error('no epUUID field') }
     if (singleSelect) {
       const saveObject = products.map((p) => {
         return {

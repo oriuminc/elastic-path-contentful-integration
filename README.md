@@ -103,7 +103,7 @@ Products that are linked from Elastic Path can be easily previewed via the Conte
   3. as the example above, add it to the product you will see it show on product page.
   ![product field display](public/img/product-field-display.png "product field display")
 
-  Note: if SLUG field exists, it will get updated. Composable uses `/product/<slug>` to fetch products. In the case of elasticpath the slug is the product sku
+  Note: if SLUG field exists, it will get updated. Composable uses `/product/<slug>` to fetch products. In the case of elasticpath the slug is the product sku. Same thing happens to EP Product UUID, if the field `epUUID` is present
 
 
   Also, you should be able to search the collection by SKU
