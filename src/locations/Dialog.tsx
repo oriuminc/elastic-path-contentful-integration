@@ -54,26 +54,28 @@ const Dialog = () => {
       const { [product.id]: _, ...rest } = selectedProducts;
       setSelectedProducts(rest);
     } else {
-      const newSelection = singleSelect ? {
-        [product.id]: {
-          name: product.name,
-          sku: product.sku,
-          id: product.id,
-          main_image: product.main_image,
-          catalogTag: selectedCatalog?.headerTag,
-          catalogChannel: selectedCatalog?.headerChannel,
-        }
-      } : {
-        ...selectedProducts,
-        [product.id]: {
-          name: product.name,
-          sku: product.sku,
-          id: product.id,
-          main_image: product.main_image,
-          catalogTag: selectedCatalog?.headerTag,
-          catalogChannel: selectedCatalog?.headerChannel,
-        },
-      }
+      const newSelection = singleSelect
+        ? {
+            [product.id]: {
+              name: product.name,
+              sku: product.sku,
+              id: product.id,
+              main_image: product.main_image,
+              catalogTag: selectedCatalog?.headerTag,
+              catalogChannel: selectedCatalog?.headerChannel,
+            },
+          }
+        : {
+            ...selectedProducts,
+            [product.id]: {
+              name: product.name,
+              sku: product.sku,
+              id: product.id,
+              main_image: product.main_image,
+              catalogTag: selectedCatalog?.headerTag,
+              catalogChannel: selectedCatalog?.headerChannel,
+            },
+          };
       setSelectedProducts(newSelection);
     }
   };
@@ -101,7 +103,17 @@ const Dialog = () => {
     const { data: products, included } = await getCatalogProducts({
       filterAttribute: EpFilterAttribute.SKU,
       filterOperator: EpFilterOperator.IN,
-      values: data.products.map((product: any) => product.attributes.sku), // [data[51].attributes.sku, data[50].attributes.sku]
+      values: data.products.map((product: any) => {
+        if (product.attributes.sku.includes("--")) {
+          // TODO: temp fix for SKU with --, URL Encoding also not working, must be on EP side
+          console.error(
+            "found a bad product SKU with `--`, filtering out this product because EP can processing it",
+            product?.attributes.sku
+          );
+          return product.attributes.sku.replaceAll("--", "-");
+        }
+        return product.attributes.sku;
+      }), // [data[51].attributes.sku, data[50].attributes.sku]
       catalogTag: selectedCatalog?.headerTag,
       catalogChannel: selectedCatalog?.headerChannel,
     });
@@ -159,7 +171,7 @@ const Dialog = () => {
               style={{ width: "50%" }}
               gap={"spacingXs"}
             >
-              {catalogs.length > 0 &&
+              {catalogs.length > 0 && (
                 <ButtonGroup>
                   <Button variant="primary">Catalog</Button>
                   <Select
@@ -182,7 +194,7 @@ const Dialog = () => {
                     ))}
                   </Select>
                 </ButtonGroup>
-              }
+              )}
               <TextInput
                 style={{ width: "50%" }}
                 placeholder="Product (case-sensitive)"
