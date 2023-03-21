@@ -41,14 +41,33 @@ const Field = () => {
   const singleSelect = sdk.field.type === 'Symbol';
   const [currentProducts, setCurrentProducts] = useState<any[]>([]);
   const sensors = [useSensor(PointerSensor)];
-  
+
   const setFieldValue = (products: any[]) => {
-    return sdk.field.setValue(singleSelect ? products[0].sku : products)
+    try {
+      sdk.entry.fields.slug.setValue(`product/${products[0].sku}`)
+    } catch (e) { console.error('no slug field') }
+    try {
+      sdk.entry.fields.epUUID.setValue(`${products[0].id}`)
+    } catch (e) { console.error('no epUUID field') }
+    if (singleSelect) {
+      const saveObject = products.map((p) => {
+        return {
+          catalogChannel: p.catalogChannel || '',
+          catalogTag: p.catalogTag || '',
+          id: p.id,
+          sku: p.sku,
+        }
+      })
+      return sdk.field.setValue(JSON.stringify(saveObject))
+
+    } else {
+      return sdk.field.setValue(products)
+    }
   }
-  
+
   const getFieldValue = () => {
     const data = sdk.field.getValue();
-    return singleSelect ? [{ sku: data, id: data }] : data
+    return singleSelect ? JSON.parse(data) : data
   }
 
   useEffect(() => {
@@ -68,17 +87,20 @@ const Field = () => {
       .then(async () => {
         await syncDataProducts();
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const syncDataProducts = async () => {
     const currentProducts = getFieldValue();
+    const { catalogChannel, catalogTag } = currentProducts[0] || { catalogChannel: '', catalogTag: '' }
     if (currentProducts && currentProducts.length) {
       // Getting the product details from EP in case some was updated
       const { data: products, included } = await getCatalogProducts({
         filterAttribute: EpFilterAttribute.SKU,
         filterOperator: EpFilterOperator.IN,
         values: currentProducts.map((product: any) => product.sku),
+        catalogTag,
+        catalogChannel,
       });
 
       // EP is not returning the products in the order we have specified in the in filter
@@ -86,7 +108,6 @@ const Field = () => {
         products,
         included
       );
-
       if (singleSelect) {
         setCurrentProducts(productsWithImage);
       } else {
@@ -159,44 +180,44 @@ const Field = () => {
   }
 
   const actionButtons =
-  singleSelect ?
-    currentProducts.length > 0 ?
-      <IconButton
-        onClick={removeAllProducts}
-        variant="negative"
-        title="Clean"
-        aria-label="Select the date"
-        icon={<DeleteIcon />}>
-        Clean
-      </IconButton>
-      :
+    singleSelect ?
+      currentProducts.length > 0 ?
+        <IconButton
+          onClick={removeAllProducts}
+          variant="negative"
+          title="Clean"
+          aria-label="Select the date"
+          icon={<DeleteIcon />}>
+          Clean
+        </IconButton>
+        :
 
-      <IconButton
-        onClick={addProducts}
-        variant="positive"
-        title="Pick a Product"
-        aria-label="Select the date"
-        icon={<PlusCircleIcon />}>
-        Add Product
-      </IconButton>
-    :
-    <>
-      <IconButton
-        onClick={addProducts}
-        variant="positive"
-        title="Add products"
-        aria-label="Select the date"
-        icon={<PlusCircleIcon />}>
-        Add Product
-      </IconButton><IconButton
-        onClick={removeAllProducts}
-        variant="negative"
-        title="Clean products"
-        aria-label="Select the date"
-        icon={<DeleteIcon />}>
-        Clean
-      </IconButton>
-    </>
+        <IconButton
+          onClick={addProducts}
+          variant="positive"
+          title="Pick a Product"
+          aria-label="Select the date"
+          icon={<PlusCircleIcon />}>
+          Add Product
+        </IconButton>
+      :
+      <>
+        <IconButton
+          onClick={addProducts}
+          variant="positive"
+          title="Add products"
+          aria-label="Select the date"
+          icon={<PlusCircleIcon />}>
+          Add Product
+        </IconButton><IconButton
+          onClick={removeAllProducts}
+          variant="negative"
+          title="Clean products"
+          aria-label="Select the date"
+          icon={<DeleteIcon />}>
+          Clean
+        </IconButton>
+      </>
 
   return (
     <Box>
@@ -205,7 +226,7 @@ const Field = () => {
           fullWidth={true}
           justifyContent={"space-between"}
           gap={"spacingS"} >
-            { actionButtons }
+          {actionButtons}
         </Flex>
       </Stack>
 
