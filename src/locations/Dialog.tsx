@@ -216,19 +216,17 @@ const Dialog = () => {
           alignItems={"center"}
           justifyContent={"center"}
         >
-          {products.length ? (
-            <Pagination
-              isLastPage={
-                paging.total &&
-                (paging.total < paging.offset + PAGE_SIZE ||
-                  paging.total < PAGE_SIZE)
-              }
-              activePage={paging.offset / PAGE_SIZE}
-              onPageChange={handleChangePage}
-              itemsPerPage={PAGE_SIZE}
-              totalItems={paging.total}
-            />
-          ) : null}
+          <Pagination
+            isLastPage={
+              paging.total &&
+              (paging.total < paging.offset + PAGE_SIZE ||
+                paging.total < PAGE_SIZE)
+            }
+            activePage={paging.offset / PAGE_SIZE}
+            onPageChange={handleChangePage}
+            itemsPerPage={PAGE_SIZE}
+            totalItems={paging.total}
+          />
           {products.length ? (
             products.map((product: any) => (
               <Box key={product.id} style={{ maxWidth: "200px" }}>
@@ -260,19 +258,17 @@ const Dialog = () => {
               No products found{" "}
             </Text>
           )}
-          {products.length ? (
-            <Pagination
-              isLastPage={
-                paging.total &&
-                (paging.total < paging.offset + PAGE_SIZE ||
-                  paging.total < PAGE_SIZE)
-              }
-              activePage={paging.offset / PAGE_SIZE}
-              onPageChange={handleChangePage}
-              itemsPerPage={PAGE_SIZE}
-              totalItems={paging.total}
-            />
-          ) : null}
+          <Pagination
+            isLastPage={
+              paging.total &&
+              (paging.total < paging.offset + PAGE_SIZE ||
+                paging.total < PAGE_SIZE)
+            }
+            activePage={paging.offset / PAGE_SIZE}
+            onPageChange={handleChangePage}
+            itemsPerPage={PAGE_SIZE}
+            totalItems={paging.total}
+          />
         </Flex>
       </Workbench.Content>
     </Workbench>
