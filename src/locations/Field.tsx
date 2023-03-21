@@ -38,37 +38,40 @@ import { EP_HOST } from "../constants";
 const Field = () => {
   const sdk = useSDK<FieldExtensionSDK>();
   // if its Symbol means only one value, if JSON takes multiple values
-  const singleSelect = sdk.field.type === 'Symbol';
+  const singleSelect = sdk.field.type === "Symbol";
   const [currentProducts, setCurrentProducts] = useState<any[]>([]);
   const sensors = [useSensor(PointerSensor)];
 
   const setFieldValue = (products: any[]) => {
     try {
-      sdk.entry.fields.slug.setValue(`product/${products[0].sku}`)
-    } catch (e) { console.error('no slug field') }
+      sdk.entry.fields.slug.setValue(`product/${products[0].sku}`);
+    } catch (e) {
+      console.error("no slug field");
+    }
     try {
-      sdk.entry.fields.epUUID.setValue(`${products[0].id}`)
-    } catch (e) { console.error('no epUUID field') }
+      sdk.entry.fields.epUUID.setValue(`${products[0].id}`);
+    } catch (e) {
+      console.error("no epUUID field");
+    }
     if (singleSelect) {
       const saveObject = products.map((p) => {
         return {
-          catalogChannel: p.catalogChannel || '',
-          catalogTag: p.catalogTag || '',
+          catalogChannel: p.catalogChannel || "",
+          catalogTag: p.catalogTag || "",
           id: p.id,
           sku: p.sku,
-        }
-      })
-      return sdk.field.setValue(JSON.stringify(saveObject))
-
+        };
+      });
+      return sdk.field.setValue(JSON.stringify(saveObject));
     } else {
-      return sdk.field.setValue(products)
+      return sdk.field.setValue(products);
     }
-  }
+  };
 
   const getFieldValue = () => {
     const data = sdk.field.getValue();
-    return singleSelect ? JSON.parse(data) : data
-  }
+    return singleSelect ? JSON.parse(data) : data;
+  };
 
   useEffect(() => {
     // adjust the contentful field to the pxm field
@@ -92,13 +95,16 @@ const Field = () => {
 
   const syncDataProducts = async () => {
     const currentProducts = getFieldValue();
-    const { catalogChannel, catalogTag } = currentProducts[0] || { catalogChannel: '', catalogTag: '' }
+    const { catalogChannel, catalogTag } = currentProducts[0] || {
+      catalogChannel: "",
+      catalogTag: "",
+    };
     if (currentProducts && currentProducts.length) {
       // Getting the product details from EP in case some was updated
       const { data: products, included } = await getCatalogProducts({
-        filterAttribute: EpFilterAttribute.SKU,
+        filterAttribute: EpFilterAttribute.ID,
         filterOperator: EpFilterOperator.IN,
-        values: currentProducts.map((product: any) => product.sku),
+        values: currentProducts.map((product: any) => product.id),
         catalogTag,
         catalogChannel,
       });
@@ -112,7 +118,9 @@ const Field = () => {
         setCurrentProducts(productsWithImage);
       } else {
         const updatedProducts = currentProducts.map((product: any) => {
-          const newData = productsWithImage.find((p: any) => p.id === product.id);
+          const newData = productsWithImage.find(
+            (p: any) => p.id === product.id
+          );
           return {
             ...newData,
           };
@@ -124,14 +132,16 @@ const Field = () => {
   };
 
   const removeAllProducts = async () => {
-    singleSelect ? sdk.field.setValue('') : sdk.field.setValue([])
+    singleSelect ? sdk.field.setValue("") : sdk.field.setValue([]);
     setCurrentProducts([]);
   };
 
   const removeProduct = async (productId: any) => {
     const currentProducts = getFieldValue();
-    const newProducts = currentProducts.filter((product: any) => product.id !== productId)
-    const products = await setFieldValue([...newProducts]) as any;
+    const newProducts = currentProducts.filter(
+      (product: any) => product.id !== productId
+    );
+    const products = (await setFieldValue([...newProducts])) as any;
     setCurrentProducts([...products]);
   };
 
@@ -160,8 +170,8 @@ const Field = () => {
       shouldCloseOnOverlayClick: true,
       shouldCloseOnEscapePress: true,
       parameters: {
-        singleSelect
-      }
+        singleSelect,
+      },
     });
 
     if (singleSelect) {
@@ -179,45 +189,50 @@ const Field = () => {
     }
   }
 
-  const actionButtons =
-    singleSelect ?
-      currentProducts.length > 0 ?
-        <IconButton
-          onClick={removeAllProducts}
-          variant="negative"
-          title="Clean"
-          aria-label="Select the date"
-          icon={<DeleteIcon />}>
-          Clean
-        </IconButton>
-        :
-
-        <IconButton
-          onClick={addProducts}
-          variant="positive"
-          title="Pick a Product"
-          aria-label="Select the date"
-          icon={<PlusCircleIcon />}>
-          Add Product
-        </IconButton>
-      :
-      <>
-        <IconButton
-          onClick={addProducts}
-          variant="positive"
-          title="Add products"
-          aria-label="Select the date"
-          icon={<PlusCircleIcon />}>
-          Add Product
-        </IconButton><IconButton
-          onClick={removeAllProducts}
-          variant="negative"
-          title="Clean products"
-          aria-label="Select the date"
-          icon={<DeleteIcon />}>
-          Clean
-        </IconButton>
-      </>
+  const actionButtons = singleSelect ? (
+    currentProducts.length > 0 ? (
+      <IconButton
+        onClick={removeAllProducts}
+        variant="negative"
+        title="Clean"
+        aria-label="Select the date"
+        icon={<DeleteIcon />}
+      >
+        Clean
+      </IconButton>
+    ) : (
+      <IconButton
+        onClick={addProducts}
+        variant="positive"
+        title="Pick a Product"
+        aria-label="Select the date"
+        icon={<PlusCircleIcon />}
+      >
+        Add Product
+      </IconButton>
+    )
+  ) : (
+    <>
+      <IconButton
+        onClick={addProducts}
+        variant="positive"
+        title="Add products"
+        aria-label="Select the date"
+        icon={<PlusCircleIcon />}
+      >
+        Add Product
+      </IconButton>
+      <IconButton
+        onClick={removeAllProducts}
+        variant="negative"
+        title="Clean products"
+        aria-label="Select the date"
+        icon={<DeleteIcon />}
+      >
+        Clean
+      </IconButton>
+    </>
+  );
 
   return (
     <Box>
@@ -225,7 +240,8 @@ const Field = () => {
         <Flex
           fullWidth={true}
           justifyContent={"space-between"}
-          gap={"spacingS"} >
+          gap={"spacingS"}
+        >
           {actionButtons}
         </Flex>
       </Stack>
@@ -275,19 +291,21 @@ const Field = () => {
                           </Text>
                         </Flex>
                       </Flex>
-                      {!singleSelect && <Box
-                        style={{
-                          textAlign: "right",
-                          width: "20%",
-                          paddingTop: "0.5em",
-                          paddingRight: "0.5em",
-                        }}
-                      >
-                        <CloseIcon
-                          variant={"muted"}
-                          onClick={() => removeProduct(product.id)}
-                        />
-                      </Box>}
+                      {!singleSelect && (
+                        <Box
+                          style={{
+                            textAlign: "right",
+                            width: "20%",
+                            paddingTop: "0.5em",
+                            paddingRight: "0.5em",
+                          }}
+                        >
+                          <CloseIcon
+                            variant={"muted"}
+                            onClick={() => removeProduct(product.id)}
+                          />
+                        </Box>
+                      )}
                     </Flex>
                   </Card>
                 )

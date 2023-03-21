@@ -204,10 +204,14 @@ export enum EpFilterAttribute {
   SKU = "sku",
   SLUG = "slug",
   NAME = "name",
+  ID = "id",
 }
 
 export type BuildFilterProps = (
   values: string | string[],
-  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME,
+  filterAttribute:
+    | EpFilterAttribute.SKU
+    | EpFilterAttribute.NAME
+    | EpFilterAttribute.ID,
   filterOperator: EpFilterOperator.EQ | EpFilterOperator.IN
 ) => string;

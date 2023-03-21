@@ -60,7 +60,10 @@ export const getCatalogProducts = async ({
   catalogTag = "",
   catalogChannel = "",
 }: {
-  filterAttribute: EpFilterAttribute.SKU | EpFilterAttribute.NAME;
+  filterAttribute:
+    | EpFilterAttribute.SKU
+    | EpFilterAttribute.NAME
+    | EpFilterAttribute.ID;
   filterOperator: EpFilterOperator.EQ | EpFilterOperator.IN;
   values: string | string[];
   catalogTag?: string;

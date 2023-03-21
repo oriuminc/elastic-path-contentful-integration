@@ -101,19 +101,9 @@ const Dialog = () => {
     if (!data.total) return { products: [] };
 
     const { data: products, included } = await getCatalogProducts({
-      filterAttribute: EpFilterAttribute.SKU,
+      filterAttribute: EpFilterAttribute.ID,
       filterOperator: EpFilterOperator.IN,
-      values: data.products.map((product: any) => {
-        if (product.attributes.sku.includes("--")) {
-          // TODO: temp fix for SKU with --, URL Encoding also not working, must be on EP side
-          console.error(
-            "found a bad product SKU with `--`, filtering out this product because EP can processing it",
-            product?.attributes.sku
-          );
-          return product.attributes.sku.replaceAll("--", "-");
-        }
-        return product.attributes.sku;
-      }), // [data[51].attributes.sku, data[50].attributes.sku]
+      values: data.products.map((product: any) => product.id), // [data[51].attributes.id, data[50].attributes.id]
       catalogTag: selectedCatalog?.headerTag,
       catalogChannel: selectedCatalog?.headerChannel,
     });
