@@ -74,7 +74,7 @@ export const getCatalogProducts = async ({
   // TODO: type?
   // EpCollectionResponse<EpProductInterface[]>
   const products: any = await axios.get(
-    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&include=main_image`,
+    `${EP_HOST}/pcm/catalog/products?filter=${filterUrl}&page[limit]=100&include=main_image`,
     {
       headers: {
         ...(catalogTag && { "EP-Context-Tag": catalogTag }),
